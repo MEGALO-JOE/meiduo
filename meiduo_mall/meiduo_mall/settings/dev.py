@@ -46,11 +46,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'users.apps.UsersConfig',
+
     'rest_framework',
-    'users.apps.UsersConfig'
+    'corsheaders', # cors
+
+
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # 最外层的中间件
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -223,3 +228,15 @@ REST_FRAMEWORK = {
 
 # 我们自定义的用户模型类还不能直接被Django的认证系统所识别，需要在配置文件中告知Django认证系统使用我们自定义的模型类。
 AUTH_USER_MODEL = 'users.User'
+
+# cors添加白名单
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost','www.meiduo.com','api.meiduo.com']
+
+# CORS  追加白名单
+CORS_ORIGIN_WHITELIST = (
+    '127.0.0.1:8080',
+    'localhost:8080',
+    'www.meiduo.com:8080',
+    'api.meiduo.com:8080'
+)
+CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
