@@ -28,9 +28,9 @@ class SMSCodeView(APIView):
         # TODO 验证手机是否已经注册
 
         # 生成验证码
-        SMS_code = "06%d" % randint(0,999999)
+        SMS_code = "%06d" % randint(0,999999)
         logger = logging.getLogger('django')
-        logger.info("SMS_code:%s " % SMS_code)
+        logger.info(SMS_code)
 
 
         # # 将验证码存入redis中
@@ -54,7 +54,7 @@ class SMSCodeView(APIView):
         # 存储标记
         pl.setex("send_flag_%s" % mobile,constants.SEND_SMS_CODE_INTERVAL,1)
         # 执行
-        pl.execute()
+        pl.execute()  #返回是一个元组
 
         # 发送短信
         # CCP().send_template_sms(mobile,[SMS_code,constants.SMS_CODE_REDIS_EXPIRES // 60],1)
@@ -67,5 +67,7 @@ class SMSCodeView(APIView):
         send_sms_code.delay(mobile,SMS_code)
 
 
+        print("-----------------")
+        print(redis_conn.get("sms_cod_%s" % mobile))
 
         return Response(data={"message":"ok"})

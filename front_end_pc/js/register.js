@@ -9,6 +9,7 @@ var vm = new Vue({
         error_allow: false,
         error_sms_code: false,
         sending_flag: false,
+        error_img_code:false,
 
         username: '',
         password: '',
@@ -21,6 +22,7 @@ var vm = new Vue({
         error_sms_code_message: '',  // 验证码错误信息提示
         error_name_message: '',  // 用户名错误信息提示
         error_phone_message: '', // 手机号错误信息提示
+        error_img_message: '',     //图片验证码错误提示
     },
     methods: {
         // 检查用户名
@@ -65,6 +67,11 @@ var vm = new Vue({
                 this.error_check_password = false;
             }
         },
+
+
+        //检查图片验证码
+
+
         // 检查手机号
         check_phone: function () {
             var re = /^1[3456789]\d{9}$/;

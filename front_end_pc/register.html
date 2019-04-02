@@ -45,6 +45,14 @@
 						<input type="text" name="phone" v-model="mobile" @blur="check_phone"  id="phone">
 						<span v-show="error_phone" class="error_tip">{{ error_phone_message }}</span>
 					</li>
+
+					<!--<li class="form_group">-->
+						<!--<label class="input_tip">图形验证码:</label>-->
+						<!--<input type="text" v-model="img_code" @blur="check_img_code" name="code_pwd" id="imagecode" class="code_pwd">-->
+						<!--<img src="../../static/news/images/pic_code.png" class="get_pic_code" onclick="generateImageCode()">-->
+						<!--<span v-show="error_img_code" class="error_tip">{{ error_img_message }}</span>-->
+					<!--</li>-->
+
 					<li>
 						<label>短信验证码:</label>
 						<input type="text" v-model="sms_code" @blur="check_sms_code" name="msg_code" id="msg_code" class="msg_input">
