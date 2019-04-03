@@ -1,5 +1,6 @@
 """开发阶段配置文件"""
 
+
 """
 Django settings for meiduo_mall project.
 
@@ -223,7 +224,16 @@ LOGGING = {
 
 # 异常处理
 REST_FRAMEWORK = {
+    # 异常处理
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
+    # 认证
+    # DRF  解决跨域省份验证
+    # DRF配置
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
 }
 
 # 我们自定义的用户模型类还不能直接被Django的认证系统所识别，需要在配置文件中告知Django认证系统使用我们自定义的模型类。
@@ -240,3 +250,18 @@ CORS_ORIGIN_WHITELIST = (
     'api.meiduo.com:8080'
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
+
+import datetime
+
+# JWT的有效期
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+
+    # 修改JWT登录视图的构造响应数据的函数
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'users.utils.jwt_response_payload_handler',
+
+}
+
+
+# 修改Django用户认证后端类
+AUTHENTICATION_BACKENDS = ['users.utils.UsernameMobileAuthBackend']

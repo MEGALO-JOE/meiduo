@@ -66,8 +66,8 @@ class SMSCodeView(APIView):
         """
         send_sms_code.delay(mobile,SMS_code)
 
-
-        print("-----------------")
-        print(redis_conn.get("sms_cod_%s" % mobile))
+        #
+        # print("-----------------")
+        # print(redis_conn.get("sms_cod_%s" % mobile))
 
         return Response(data={"message":"ok"})
