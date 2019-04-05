@@ -41,4 +41,3 @@ class UserMobileView(APIView):
 
         return Response(data=data)
 
-

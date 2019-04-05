@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import sys
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
-# print(sys.path)
+print(sys.path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -48,9 +48,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'users.apps.UsersConfig',
+    'oauth.apps.OauthConfig',
 
     'rest_framework',
     'corsheaders', # cors
+
 
 
 ]
@@ -227,7 +229,7 @@ REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
     # 认证
-    # DRF  解决跨域省份验证
+    # DRF  解决跨域身份验证
     # DRF配置
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
