@@ -19,5 +19,7 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^', include('verifications.urls')),  # 发送短信模块
-    url(r'^', include('users.urls'))  # 注册用户模块
+    url(r'^', include('users.urls')), # 注册用户模块
+
+    url(r'^oauth/',include('oauth.urls')), #qq登陆
 ]

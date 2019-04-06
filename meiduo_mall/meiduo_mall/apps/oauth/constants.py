@@ -1,0 +1,1 @@
+ITSDANGEROUS_LIFETIME = 600  #加密openid后的token的有效期

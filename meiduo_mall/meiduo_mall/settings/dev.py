@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 import sys
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
-print(sys.path)
+# print(sys.path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -47,13 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'users.apps.UsersConfig',
-    'oauth.apps.OauthConfig',
-
     'rest_framework',
     'corsheaders', # cors
 
-
+    'users.apps.UsersConfig',
+    'oauth.apps.OauthConfig',
 
 ]
 
@@ -242,14 +240,15 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'users.User'
 
 # cors添加白名单
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost','www.meiduo.com','api.meiduo.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost','www.meiduo.com','api.meiduo.com','www.meiduo.site']
 
 # CORS  追加白名单
 CORS_ORIGIN_WHITELIST = (
     '127.0.0.1:8080',
     'localhost:8080',
     'www.meiduo.com:8080',
-    'api.meiduo.com:8080'
+    'api.meiduo.com:8080',
+    'www.meiduo.site:8080'
 )
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
 
@@ -267,3 +266,11 @@ JWT_AUTH = {
 
 # 修改Django用户认证后端类
 AUTHENTICATION_BACKENDS = ['users.utils.UsernameMobileAuthBackend']
+
+
+
+# QQ登录参数
+QQ_CLIENT_ID = '101514053'
+QQ_CLIENT_SECRET = '1075e75648566262ea35afa688073012'
+QQ_REDIRECT_URI = 'http://www.meiduo.site:8080/oauth_callback.html'
+
