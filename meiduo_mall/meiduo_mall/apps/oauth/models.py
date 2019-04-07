@@ -14,3 +14,5 @@ class OAuthQQUser(BaseModel):
         db_table = "tb_oauth_qq"
         verbose_name = "qq用户登陆数据"
         verbose_name_plural = verbose_name  #复数形式的显示
+
+

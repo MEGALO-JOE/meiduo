@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from django_redis import get_redis_connection
 
-from utils.models import BaseModel
 from .utils import generate_real_openid
 from .models import OAuthQQUser
 from users.models import User
