@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from rest_framework_extensions.cache.mixins import CacheResponseMixin  #加入缓存
 
 from .models import Areas
 
 
-class AreaSerializer(serializers.ModelSerializer):
+class AreaSerializer(CacheResponseMixin,serializers.ModelSerializer):
     """省份序列化器"""
 
     class Meta:
