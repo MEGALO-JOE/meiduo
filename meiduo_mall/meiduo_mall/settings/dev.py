@@ -48,11 +48,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
-    'corsheaders', # cors
+    'corsheaders', # cors跨域
 
-    'users.apps.UsersConfig',
-    'oauth.apps.OauthConfig',
-    'areas.apps.AreasConfig',
+    'users.apps.UsersConfig',   #用户
+    'oauth.apps.OauthConfig',   #QQ登录
+    'areas.apps.AreasConfig',   #省市区自联表
+    'goods.apps.GoodsConfig',   #商品
+    'contents.apps.ContentsConfig', #广告
 
 ]
 
