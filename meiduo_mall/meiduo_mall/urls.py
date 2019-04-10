@@ -23,5 +23,7 @@ urlpatterns = [
 
     url(r'^oauth/',include('oauth.urls')), #qq登陆
 
-    url(r"^",include('areas.urls'))
+    url(r"^",include('areas.urls')),  #省市区
+
+    url(r'^ckeditor/', include('ckeditor_uploader.urls')),  #富文本编辑器
 ]

@@ -139,6 +139,7 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     # put /addresses/pk/status/
+    # 自定义的方法需要使用action装饰器装饰，这样rooter路由就能自动生成
     @action(methods=['put'], detail=True)
     def status(self, request, pk=None):
         """

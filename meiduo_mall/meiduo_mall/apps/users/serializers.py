@@ -170,6 +170,10 @@ class UserAddressSerializer(serializers.ModelSerializer):
         """
         保存
         """
+        # 怎么在序列化器里面拿到用户对象
+        # Context属性。 能拿到请求对象就能拿到user
+        # 前提：
+        # 必须继承GerenrcAPIView，才能从context中取到user
         validated_data['user'] = self.context['request'].user  #核心代码
         return super().create(validated_data)
 
