@@ -1,10 +1,13 @@
 from django.shortcuts import render
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
+from rest_framework import status
 
-from . models import GoodsCategory
-from .serializers import ChannelSerializer,CategorySerializer
+from . models import GoodsCategory,SKU
+from .serializers import ChannelSerializer,CategorySerializer,SKUSerializer
+
 
 class CategoryView(GenericAPIView):
     """
@@ -35,30 +38,27 @@ class CategoryView(GenericAPIView):
 
         return Response(ret)
 
-#
-# class CategoriesView(APIView):
-#     """获取当前分类信息"""
-#
-#     def get(self,request, pk):
-#         """
-#         1.获取前端数据
-#         2. 查询当前三级分类信息
-#         3.通过三级分类信息获取一二集分类
-#         4. 返回
-#         :param request:
-#         :return:
-#         """
-#         cat3 = GoodsCategory.objects.get(id=pk) # 获取三级
-#         cat2 = cat3.parent  # 自关联获取二级,
-#         cat1 = cat2.parent  # 自关联获取一级
-#
-#         data = {
-#             "cat1": cat1.name,
-#             "cat2": cat2.name,
-#             "cat3": cat3.name
-#         }
-#
-#         print(data)
-#
-#         # 返回数据
-#         return Response(data=data)
+
+class SKUListView(ListAPIView):
+    """SKU商品分页"""
+
+    serializer_class = SKUSerializer
+
+    # 指定过滤后端为排序过滤
+    filter_backends = (OrderingFilter,)
+
+    ordering_fields = ("create_time","price","sales")
+
+    def get_queryset(self):
+        """
+        如果当前在视图中没有去定义get /post方法 那么就没法定义一个参数用来接收正则组提取出来的url路径参数,
+        可以利用视图对象的 args或kwargs属性去获取啊
+        :return:
+        """
+        category_id = self.kwargs.get("category_id")
+
+        if not category_id:
+            return Response({"message":"参数错误"},status=status.HTTP_400_BAD_REQUEST)
+        # is_launched 上架的
+        return SKU.objects.filter(category_id=category_id,is_launched=True)
+

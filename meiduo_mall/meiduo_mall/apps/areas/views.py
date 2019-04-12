@@ -8,6 +8,9 @@ from . import serializers
 class AreasViewSet(ReadOnlyModelViewSet):
     """省份视图"""
 
+        # 全局分页设置为none
+    pagination_class = None
+
     def get_queryset(self):
         """提供数据"""
 
