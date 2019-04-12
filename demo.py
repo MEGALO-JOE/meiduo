@@ -143,3 +143,38 @@ class B(object):
         super(B,self).__init__()
 
         print("lea B")
+
+
+# for sku_id_bytes, count_bytes in cart_redis_dict.items():  # 遍历hash中的所有键值对字典,
+#     cart_dict[int(sku_id_bytes)] = {  # 包到字典中的数据注意类型转换
+#         'count': int(count_bytes),
+#         'selected': sku_id_bytes in selecteds
+#     }
+
+a = {1:"nihao",2:"buhao"}
+
+print(a.items())
+
+aa = []
+bb = []
+
+for key,value in a.items():
+    aa.append(key)
+    bb.append(value)
+
+
+print(aa)
+print(bb)
+
+
+
+
+
+
+
+
+
+
+
+
+
