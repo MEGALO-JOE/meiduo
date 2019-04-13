@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_redis import get_redis_connection
@@ -7,6 +6,7 @@ import base64, pickle
 
 from goods.models import SKU
 from . import serializers
+from meiduo_mall.utils.CartCookieCoder import set_cart_cookie_str, get_cart_cookie_dict
 
 
 # Create your views here.
@@ -60,21 +60,25 @@ class CartView(APIView):
             """
             # 新增购物车数据
             pl.hincrby("cart_%s" % user.id, sku_id, count)
-            # 新增选中状态
-            if selected:
-                pl.sadd("selected_%s" % user.id, sku_id)
 
             pl.execute()
         else:
             # 用户未登陆
             # 获取购物车数据
-            carts_str = request.COOKIES.get("cart")
-            if not carts_str:
+            cookie_cart_str = request.COOKIES.get("cart")
+            if not cookie_cart_str:
                 # 没有购物车，创建一个
                 carts_dict = {}
             else:
-                # 有购物车 ，将cookie中取到的carts_str转换成bytes，再将bytes转换成bace64的bytes，最后将bytes转成字典
-                carts_dict = pickle.loads(base64.b64decode(carts_str.endeco()))
+                # # 把字条串转换成bytes类型的字符串
+                # cart_str_bytes = cookie_cart_str.encode()
+                # # 把bytes类型的字符串转换成bytes类型
+                # cart_bytes = base64.b64decode(cart_str_bytes)
+                # # 把bytes类型转换成字典
+                # carts_dict = pickle.loads(cart_bytes)
+
+                carts_dict = get_cart_cookie_dict(cookie_cart_str)
+
 
             # 判断要加入的商品是否已经存在在购物车
             if sku_id in carts_dict:
@@ -87,13 +91,7 @@ class CartView(APIView):
                 "selected": selected
             }
 
-            # 将字段转换成bytes，再将bytes转换成bace64的bytes，最后将bytes转换成字符串返回给cookie
-            # 先将字典转换成bytes类型
-            cart_bytes = pickle.dumps(carts_dict)
-            # 再将bytes类型转换成bytes类型的字符串
-            cart_str_bytes = base64.b64encode(cart_bytes)
-            # 把bytes类型的字符串转换成字符串
-            cookie_carts_str = cart_str_bytes.decode()
+            cookie_carts_str = set_cart_cookie_str(carts_dict)
 
             resopnse.set_cookie("cart", cookie_carts_str)
 
@@ -123,30 +121,30 @@ class CartView(APIView):
             redis_selected = redis_conn.smembers("selected_%s" % user.id)
 
             # 将redis中的两个数据统一格式，跟cookie中的格式一致，方便统一查询
-            cart_dict = {}
+            carts_dict = {}
             for sku_id, count in redis_cart.items():
-                cart_dict[int(sku_id)] = {
+                carts_dict[int(sku_id)] = {
                     'count': int(count),
                     'selected': sku_id in redis_selected
                 }
 
         else:
             # 用户未登陆，取出cookie中的购物车数据
-            cookie_cart = request.COOKIES.get("cart")
+            cookie_cart_str = request.COOKIES.get("cart")
 
             # 将cookie中的cart转换成字典
-            if cookie_cart:
-                cart_dict = pickle.loads(base64.b64encode(cookie_cart.encode()))
+            if cookie_cart_str:
+                carts_dict = get_cart_cookie_dict(cookie_cart_str)
             else:
-                cart_dict = {}
+                carts_dict = {}
 
         # 查询购物车数据
-        sku_ids = cart_dict.keys()
+        sku_ids = carts_dict.keys()
         skus = SKU.objects.filter(id__in=sku_ids)
         # 补充count和selected字段
         for sku in skus:
-            sku.count = cart_dict[sku.id]['count']
-            sku.selected = cart_dict[sku.id]['selected']
+            sku.count = carts_dict[sku.id]['count']
+            sku.selected = carts_dict[sku.id]['selected']
 
         # 创建序列化器序列化商品数据
         serializer = serializers.CartSKUSerializer(skus, many=True)
@@ -156,7 +154,73 @@ class CartView(APIView):
 
     def put(self, request):
         """更改购物车"""
-        pass
+        # 判断用户是否登陆
+        try:
+            user = request.user
+        except Exception as e:
+            user = None
+
+        # 创建序列化器并校验
+        serializer = serializers.CartSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 获取校验后的数据
+        sku_id = serializer.validated_data.get("sku_id")
+        count = serializer.validated_data.get("count")
+        selected = serializer.validated_data.get("selected")
+
+        response = Response(serializer.data)
+        carts_dict = {}
+        # 判断用户是否登录
+        if user and user.is_authenticated:
+            # 创建连接到redis对象
+            redis_conn = get_redis_connection('cart')
+            # 管道
+            pl = redis_conn.pipeline()
+            """
+            1.概念
+            	非幂等
+		            如果后端处理结果对于这些请求的最终结果不同，跟请求次数相关，则称接口非幂等
+	            幂等
+		            对于同一个接口，进行多次相同的请求，如果后端处理结果对于这些请求都是相同的，则称接口是幂等的
+
+            HSET key field value
+            将哈希表 key 中的域 field 的值设为 value 。
+            如果 key 不存在，一个新的哈希表被创建并进行 HSET 操作。            
+            如果域 field 已经存在于哈希表中，旧值将被覆盖。
+            """
+            # 因为接口设计为幂等的，直接覆盖
+            pl.hset('cart_%s' % user.id, sku_id, count)
+            # 是否选中
+            if selected:
+                pl.sadd('selected_%s' % user.id, sku_id)
+            else:
+                pl.srem('selected_%s' % user.id, sku_id)
+            # 执行
+            pl.execute()
+
+        else:
+            cookie_cart_str = request.COOKIES.get("cart")
+
+            if cookie_cart_str:
+                carts_dict = get_cart_cookie_dict(cookie_cart_str)
+            else:
+                return Response({'message': '没有获取到cookie'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # 直接覆盖原cookie字典数据
+            carts_dict[sku_id] = {
+                'count': count,
+                'selected': selected
+            }
+            # 把cookie大字典再转换字符串
+            # cart_str = base64.b64encode(pickle.dumps(carts_dict)).decode()
+            cookie_cart_str = set_cart_cookie_str(carts_dict)
+            # # 创建响应对象
+            # response = Response(serializer.data)
+            # 设置cookie
+            response.set_cookie('cart', cookie_cart_str)
+
+        return response
 
     def delete(self, request):
         """删除购物车"""
