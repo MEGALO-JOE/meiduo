@@ -3,9 +3,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_redis import get_redis_connection
 from rest_framework import status
-import base64,pickle
+import base64, pickle
 
+from goods.models import SKU
 from . import serializers
+
 
 # Create your views here.
 class CartView(APIView):
@@ -18,7 +20,7 @@ class CartView(APIView):
         """
         pass
 
-    def post(self,request):
+    def post(self, request):
         """添加购物车"""
 
         serializer = serializers.CartSerializer(data=request.data)
@@ -41,7 +43,7 @@ class CartView(APIView):
         except Exception as e:
             user = None
 
-        resopnse = Response(serializer.data,status=status.HTTP_201_CREATED)
+        resopnse = Response(serializer.data, status=status.HTTP_201_CREATED)
         if user and user.is_authenticated:
             """表示登陆用户"""
             redis_conn = get_redis_connection("carts")
@@ -57,10 +59,10 @@ class CartView(APIView):
             本操作的值被限制在 64 位(bit)有符号数字表示之内。
             """
             # 新增购物车数据
-            pl.hincrby("cart_%s" %user.id,sku_id,count)
+            pl.hincrby("cart_%s" % user.id, sku_id, count)
             # 新增选中状态
             if selected:
-                pl.sadd("selected_%s" %user.id,sku_id)
+                pl.sadd("selected_%s" % user.id, sku_id)
 
             pl.execute()
         else:
@@ -81,8 +83,8 @@ class CartView(APIView):
                 count += origin_count
 
             carts_dict[sku_id] = {
-                "count":count,
-                "selected":selected
+                "count": count,
+                "selected": selected
             }
 
             # 将字段转换成bytes，再将bytes转换成bace64的bytes，最后将bytes转换成字符串返回给cookie
@@ -93,21 +95,69 @@ class CartView(APIView):
             # 把bytes类型的字符串转换成字符串
             cookie_carts_str = cart_str_bytes.decode()
 
-            resopnse.set_cookie("cart",cookie_carts_str)
+            resopnse.set_cookie("cart", cookie_carts_str)
 
         return resopnse
 
-
-    def get(self,request):
+    def get(self, request):
         """获取购物车"""
-        pass
 
-    def put(self,request):
+        # 判断用户是否登陆
+        try:
+            user = request.user
+        except Exception as e:
+            user = None
+
+        if user and user.is_authenticated:
+            # 用户已登陆,获取redis中的购物车数据,和勾选状态
+            redis_conn = get_redis_connection("carts")
+            """
+            HGETALL key
+            返回哈希表 key 中，所有的域和值。            
+            在返回值里，紧跟每个域名(field name)之后是域的值(value)，所以返回值的长度是哈希表大小的两倍。
+            SMEMBERS key
+            返回集合 key 中的所有成员。
+            不存在的 key 被视为空集合。
+            """
+            redis_cart = redis_conn.hgetall("cart_%s" % user.id)
+            redis_selected = redis_conn.smembers("selected_%s" % user.id)
+
+            # 将redis中的两个数据统一格式，跟cookie中的格式一致，方便统一查询
+            cart_dict = {}
+            for sku_id, count in redis_cart.items():
+                cart_dict[int(sku_id)] = {
+                    'count': int(count),
+                    'selected': sku_id in redis_selected
+                }
+
+        else:
+            # 用户未登陆，取出cookie中的购物车数据
+            cookie_cart = request.COOKIES.get("cart")
+
+            # 将cookie中的cart转换成字典
+            if cookie_cart:
+                cart_dict = pickle.loads(base64.b64encode(cookie_cart.encode()))
+            else:
+                cart_dict = {}
+
+        # 查询购物车数据
+        sku_ids = cart_dict.keys()
+        skus = SKU.objects.filter(id__in=sku_ids)
+        # 补充count和selected字段
+        for sku in skus:
+            sku.count = cart_dict[sku.id]['count']
+            sku.selected = cart_dict[sku.id]['selected']
+
+        # 创建序列化器序列化商品数据
+        serializer = serializers.CartSKUSerializer(skus, many=True)
+
+        # 响应结果
+        return Response(serializer.data)
+
+    def put(self, request):
         """更改购物车"""
         pass
 
-    def delete(self,request):
+    def delete(self, request):
         """删除购物车"""
         pass
-
-
