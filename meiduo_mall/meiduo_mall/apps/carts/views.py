@@ -270,4 +270,64 @@ class CartView(APIView):
         return response
 
 
+class CartSelectedAllView(APIView):
+    """购物车全选"""
+
+    def perform_authentication(self, request):
+
+        pass
+
+    def put(self, request):
+        """购物车全选"""
+
+        serializer = serializers.CartSelectedAllSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        selection = serializer.validated_data.get("selected")
+
+        try:
+            user = request.user
+        except:
+            user = None
+
+        response = Response(serializer.data)
+        if user and user.is_authenticated:
+
+            redis_conn = get_redis_connection("carts")
+            # 获取hash字典中的所有数据
+            cart_redis_dict = redis_conn.hgetall('cart_%d' % user.id)
+            # 把hash字典中的所有key
+            sku_ids = cart_redis_dict.keys()
+            # 判断当前selected是True还是False
+            if selection:
+                # 如果是True 就把所有sku_id 添加到set集合中 *[1, 2, 3]
+                redis_conn.sadd('selected_%d' % user.id, *sku_ids)
+            else:
+                # 如果是False 就把所有sku_id 从set集合中删除
+                redis_conn.srem('selected_%d' % user.id, *sku_ids)
+
+        else:
+
+            cookie_cart_str = request.COOKIES.get("cart")
+
+            if not cookie_cart_str:
+                return Response({'message': 'cookie 没有获取到'}, status=status.HTTP_400_BAD_REQUEST)
+
+            carts_dict = get_cart_cookie_dict(cookie_cart_str)
+
+            for sku_id in carts_dict:
+                carts_dict[sku_id]["selected"] = selection
+
+            cookie_cart_str = set_cart_cookie_str(carts_dict)
+
+            response.set_cookie("cart",cookie_cart_str)
+
+        return response
+
+
+
+
+
+
+
 
