@@ -2,9 +2,12 @@ from rest_framework import serializers
 import re
 from django_redis import get_redis_connection
 from rest_framework_jwt.settings import api_settings
+from django_redis import get_redis_connection
 
+from goods.models import SKU
 from .models import User,Address
 from celery_tasks.email.tasks import send_verify_email
+
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -186,3 +189,70 @@ class AddressTitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ('title',)
+
+
+class UserBrowseHistorySerializer(serializers.Serializer):
+    """添加用户浏览记录校验"""
+
+    sku_id = serializers.IntegerField(min_value=1,label="商品sku编号")
+
+    def validate_sku_id(self, value):
+        """校验"""
+
+        try:
+            sku = SKU.objects.filter(id = value)
+        except:
+            raise serializers.ValidationError("商品不存在！")
+
+        return value
+
+    def create(self, validated_data):
+        """存储浏览记录行为"""
+
+        """
+        获取用户id
+        读取验证后的sku_id
+        连接redis对象
+        去重
+        保存
+        截取前五个浏览记录
+        返回
+        """
+        # 获取用户id
+        user_id = self.context["request"].user.id
+        # 读取验证后的sku
+        sku_id = validated_data["sku_id"]
+        # 连接redis对象
+        redis_conn = get_redis_connection("history")
+
+        # 因为都是redis的set操作，这边利用管道优化
+        pl = redis_conn.pipeline()
+
+        # 去重
+        """
+        LREM key count value
+        根据参数 count 的值，移除列表中与参数 value 相等的元素。
+        """
+        pl.lrem("history_%s" %user_id,0,sku_id)
+
+        # 保存
+        """LPUSH key value [value ...]
+        将一个或多个值 value 插入到列表 key 的表头
+        """
+        pl.lpush("history_%s" %user_id,sku_id)
+
+        # 截取前五个浏览记录
+        """
+        LTRIM key start stop
+        对一个列表进行修剪(trim)，就是说，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除。
+        """
+        pl.ltrim("history_%s" %user_id,0,19)
+
+        # 执行
+        pl.execute()
+
+        return validated_data
+
+
+
+
