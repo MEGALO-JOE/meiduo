@@ -206,3 +206,4 @@ class UserBrowseHistoryView(CreateAPIView):
 
         # 返回
         return Response(s.data)
+

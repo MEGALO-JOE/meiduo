@@ -184,6 +184,14 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+    "carts": {   #项目商品浏览记录
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://192.168.188.181:6379/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+
 
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
