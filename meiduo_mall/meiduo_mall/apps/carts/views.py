@@ -174,7 +174,7 @@ class CartView(APIView):
         # 判断用户是否登录
         if user and user.is_authenticated:
             # 创建连接到redis对象
-            redis_conn = get_redis_connection('cart')
+            redis_conn = get_redis_connection('carts')
             # 管道
             pl = redis_conn.pipeline()
             """
@@ -224,4 +224,50 @@ class CartView(APIView):
 
     def delete(self, request):
         """删除购物车"""
-        pass
+
+        # 创建序列化器并校验
+        serializer = serializers.CartDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 获取校验后的数据
+        sku_id = serializer.validated_data.get("sku_id")
+
+        if not sku_id:
+            return Response({"message":"操作错误，你购物车中没有此件商品"},status=status.HTTP_400_BAD_REQUEST)
+
+        # 判断是否登陆
+        try:
+            user = request.user
+        except Exception:
+            user = None
+
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        if user and user.is_authenticated:
+            # 登陆用户，取出redis数据删除购物
+            redis_conn = get_redis_connection("carts")
+            pl = redis_conn.pipeline()
+
+            # 删除健就等于删除了整条记录
+            pl.hdel('cart_%s' % user.id,sku_id)
+            pl.srem('selected_%s' % user.id, sku_id)
+            pl.execute()
+
+        else:
+            cookie_cart_str = request.COOKIES.get("cart")
+
+            if cookie_cart_str:
+                carts_dict = get_cart_cookie_dict(cookie_cart_str)
+            else:
+                carts_dict = {}
+
+            if sku_id in carts_dict:
+                del carts_dict[sku_id]
+
+                cookie_cart_str = set_cart_cookie_str(carts_dict)
+
+                response.set_cookie("cart",cookie_cart_str)
+
+        return response
+
+
+
