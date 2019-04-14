@@ -1,12 +1,13 @@
 from decimal import Decimal
 from django.shortcuts import render
+from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django_redis import get_redis_connection
 
 from goods.models import SKU
-from orders.serializers import OrderSettlementSerializer
+from orders.serializers import OrderSettlementSerializer, SaveOrderSerializer
 
 
 class OrderSettlementView(APIView):
@@ -51,4 +52,12 @@ class OrderSettlementView(APIView):
         serializer = OrderSettlementSerializer({'freight': freight, 'skus': skus})
         # 返回
         return Response(serializer.data)
+
+
+class OrderSaveView(CreateAPIView):
+    """保存订单"""
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = SaveOrderSerializer
+
 
