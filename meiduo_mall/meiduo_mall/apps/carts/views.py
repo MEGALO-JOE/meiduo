@@ -13,6 +13,45 @@ from meiduo_mall.utils.CartCookieCoder import set_cart_cookie_str, get_cart_cook
 class CartView(APIView):
     """用户购物车"""
 
+    """
+    登陆用户：
+        redis
+            hash：商品和数量
+                键：cart_user.id
+                值：{"sku_id":"count","sku_id":"count",...}
+            set:勾选
+                键：select_sku_id
+                值：{sku_id1,sku_id2,...}
+                
+    非登陆用户：
+        cookie
+            {
+                sku_id:{count,select},
+                sku_id:{count,select},
+                ...
+            }
+            
+            这边涉及到字符串装字典操作：
+            str -> dict:
+            
+                # # 把字条串转换成bytes类型的字符串
+                cart_str_bytes = carts_str.encode()
+                # 把bytes类型的字符串转换成bytes类型
+                cart_bytes = base64.b64decode(cart_str_bytes)
+                # 把bytes类型转换成字典
+                carts_dict = pickle.loads(cart_bytes)
+                
+            dict -> str:
+                
+                # 先将字典转换成bytes类型
+                cart_bytes = pickle.dumps(carts_dict)
+                # 再将bytes类型转换成bytes类型的字符串
+                cart_str_bytes = base64.b64encode(cart_bytes)
+                # 把bytes类型的字符串转换成字符串
+                cookie_carts_str = cart_str_bytes.decode()
+
+    """
+
     def perform_authentication(self, request):
         """
         重写父类的用户验证方法，不在进入视图前就检查JWT
