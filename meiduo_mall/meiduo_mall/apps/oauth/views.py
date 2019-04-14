@@ -8,6 +8,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework_jwt.settings import api_settings
 from itsdangerous import BadData
 
+from carts.utils import merge_cart_cookie_to_redis
 from .models import OAuthQQUser,User
 from .utils import generate_save_user_openid_token
 from .serializers import UserOpenidSerializer
@@ -62,6 +63,8 @@ class QQAuthUserView(GenericAPIView):
                 access_token_openid = generate_save_user_openid_token(openid)
             except BadData:
                 return None
+
+
             return Response({"access_token":access_token_openid})
 
         else:
@@ -74,11 +77,16 @@ class QQAuthUserView(GenericAPIView):
             payload = jwt_payload_handler(user)
             token = jwt_encode_handler(payload)
 
-            return Response({
+            response = Response({
                 "token":token,
                 "user_id":user.id,
                 "username":user.username
             })
+
+            # 合并购物车
+            response = merge_cart_cookie_to_redis(request,response,user)
+
+            return response
 
 
     def post(self,request):
@@ -105,6 +113,9 @@ class QQAuthUserView(GenericAPIView):
             "user_id":user.id,
             "username":user.username
         })
+
+        # 合并购物车
+        response = merge_cart_cookie_to_redis(request,response,user)
 
         return response
 

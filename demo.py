@@ -122,59 +122,154 @@
 #
 #     print(result)
 
-
-class A(object):
-
-    def __init__(self):
-        print("ent A")
-
-        super(A,self).__init__()
-
-        print("lea A")
-
-
-
-
-class B(object):
-
-    def __init__(self):
-        print("ent B")
-
-        super(B,self).__init__()
-
-        print("lea B")
-
-
-# for sku_id_bytes, count_bytes in cart_redis_dict.items():  # 遍历hash中的所有键值对字典,
-#     cart_dict[int(sku_id_bytes)] = {  # 包到字典中的数据注意类型转换
-#         'count': int(count_bytes),
-#         'selected': sku_id_bytes in selecteds
-#     }
-
-a = {1:"nihao",2:"buhao"}
-
-print(a.items())
-
-aa = []
-bb = []
-
-for key,value in a.items():
-    aa.append(key)
-    bb.append(value)
-
-
-print(aa)
-print(bb)
-
-
+#
+# class A(object):
+#
+#     def __init__(self):
+#         print("ent A")
+#
+#         super(A,self).__init__()
+#
+#         print("lea A")
+#
+#
+#
+#
+# class B(object):
+#
+#     def __init__(self):
+#         print("ent B")
+#
+#         super(B,self).__init__()
+#
+#         print("lea B")
+#
+#
+# # for sku_id_bytes, count_bytes in cart_redis_dict.items():  # 遍历hash中的所有键值对字典,
+# #     cart_dict[int(sku_id_bytes)] = {  # 包到字典中的数据注意类型转换
+# #         'count': int(count_bytes),
+# #         'selected': sku_id_bytes in selecteds
+# #     }
+#
+# a = {1:"nihao",2:"buhao"}
+#
+# print(a.items())
+#
+# aa = []
+# bb = []
+#
+# for key,value in a.items():
+#     aa.append(key)
+#     bb.append(value)
+#
+#
+# print(aa)
+# print(bb)
 
 
 
+# 冒泡排序：
+def bubble_sort(alist):
+    """冒泡排序"""
+
+    for j in range(len(alist)-1,0,-1):
+        for i in range(j):
+            # if  alist[i] > alist[i+1]:
+            if alist[i] < alist[i+1]:
+                alist[i], alist[i+1] = alist[i+1],alist[i]
 
 
 
+def quick_sort(alist,start,end):
+    """快速排序"""
+
+
+    # 设置哨兵
+    # 左变哨兵
+    left = start
+    # 右边哨兵
+    right = end
+
+    # 基数
+    mid = alist[left]
+
+    if left >= right:
+        return alist
+
+    while left < right:
+
+        # 如果 right 与 left 未重合，left 指向的元素不比基准元素小，则 left 向左移动
+        while (left < right) and (alist[right] >= mid):
+            right -= 1
+
+        alist[left] = alist[right]
+
+        while (left < right) and (alist[left] <= mid):
+            left += 1
+
+        alist[right] = alist[left]
+
+    # 退出循环后，right与left重合
+    alist[left] = mid
+
+    # 对基准左边的进行快速排序
+    quick_sort(alist,start,left-1)
+
+    # 对基准的右边进行快速排序
+    quick_sort(alist,right+1,end)
+
+    return alist
+
+#QuickSort by Alvin
+
+def QuickSort(myList,start,end):
+    #判断low是否小于high,如果为false,直接返回
+    if start < end:
+        i,j = start,end
+        #设置基准数
+        base = myList[i]
+
+        while i < j:
+            #如果列表后边的数,比基准数大或相等,则前移一位直到有比基准数小的数出现
+            while (i < j) and (myList[j] >= base):
+                j = j - 1
+
+            #如找到,则把第j个元素赋值给第个元素i,此时表中i,j个元素相等
+            myList[i] = myList[j]
+
+            #同样的方式比较前半区
+            while (i < j) and (myList[i] <= base):
+                i = i + 1
+            myList[j] = myList[i]
+        #做完第一轮比较之后,列表被分成了两个半区,并且i=j,需要将这个数设置回base
+        myList[i] = base
+
+        #递归前后半区
+        QuickSort(myList, start, i - 1)
+        QuickSort(myList, j + 1, end)
+    return myList
+
+#
+# myList = [49,38,65,97,76,13,27,49]
+# print("Quick Sort: ")
+# QuickSort(myList,0,len(myList)-1)
+# print(myList)
+#
+
+list = [54,23,77,1,34,97,3,36]
+
+# bubble_sort(list)
+quick_sort(list,0,len(list)-1)
+
+print(list)
 
 
 
+a = "a",
+b = "b",
 
+c,d = a,b
+
+print(c)
+print(d)
 

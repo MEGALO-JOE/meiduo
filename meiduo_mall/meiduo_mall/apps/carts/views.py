@@ -2,11 +2,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_redis import get_redis_connection
 from rest_framework import status
-import base64, pickle
 
 from goods.models import SKU
 from . import serializers
-from meiduo_mall.utils.CartCookieCoder import set_cart_cookie_str, get_cart_cookie_dict
+from .utils import set_cart_cookie_str, get_cart_cookie_dict
 
 
 # Create your views here.
