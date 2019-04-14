@@ -29,5 +29,7 @@ urlpatterns = [
 
     url(r'^',include('goods.urls')),  #商品
 
-    url(r'^',include('carts.urls'))  # 购物车
+    url(r'^',include('carts.urls')),  # 购物车
+
+    url(r'^',include('orders.urls')),  # 购物车
 ]

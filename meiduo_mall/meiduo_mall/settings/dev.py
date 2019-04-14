@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'areas.apps.AreasConfig',   #省市区自联表
     'goods.apps.GoodsConfig',   #商品
     'contents.apps.ContentsConfig', #广告
+    'orders.apps.OrdersConfig',   #订单
 
 ]
 
