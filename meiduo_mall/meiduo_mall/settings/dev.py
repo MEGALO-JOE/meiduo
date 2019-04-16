@@ -54,6 +54,11 @@ INSTALLED_APPS = [
     'ckeditor_uploader',  # 富文本编辑器上传图片模块
     'django_crontab',  # 定时任务
 
+    #xadmin
+    'xadmin',
+    'crispy_forms',
+    'reversion',
+
     'users.apps.UsersConfig',   #用户
     'oauth.apps.OauthConfig',   #QQ登录
     'areas.apps.AreasConfig',   #省市区自联表
