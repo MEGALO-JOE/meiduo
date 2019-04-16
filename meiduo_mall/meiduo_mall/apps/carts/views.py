@@ -68,6 +68,7 @@ class CartView(APIView):
         count = serializer.validated_data.get("count")
         selected = serializer.validated_data.get("selected")
 
+
         """
         判断用户是否登陆
         用户登陆；
@@ -78,6 +79,7 @@ class CartView(APIView):
         """
         try:
             user = request.user
+
         except Exception as e:
             user = None
 
@@ -98,6 +100,8 @@ class CartView(APIView):
             """
             # 新增购物车数据
             pl.hincrby("cart_%s" % user.id, sku_id, count)
+            pl.sadd("selected_%s" % user.id,sku_id)
+
 
             pl.execute()
         else:

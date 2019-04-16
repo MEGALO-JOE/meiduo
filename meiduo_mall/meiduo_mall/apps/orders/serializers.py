@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from django_redis import get_redis_connection
 import logging
+import time
 
 from goods.models import SKU
 from orders.models import OrderInfo, OrderGoods
@@ -106,39 +107,53 @@ class SaveOrderSerializer(serializers.ModelSerializer):
 
                 # 处理订单商品
                 for sku in skus:
-                    sku_count = cart[sku.id]
 
-                    # 判断库存
-                    origin_stock = sku.stock  # 原始库存
-                    origin_sales = sku.sales  # 原始销量
+                    while True: # 让用户对同一个商品有无限次下单机会,只到库存真的不足为止
+                        sku_count = cart[sku.id]
 
-                    if sku_count > origin_stock:
-                        transaction.savepoint_rollback(save_id)
-                        raise serializers.ValidationError('商品库存不足')
+                        # 判断库存
+                        origin_stock = sku.stock  # 原始库存
+                        origin_sales = sku.sales  # 原始销量
 
-                    # 减少库存
-                    new_stock = origin_stock - sku_count
-                    new_sales = origin_sales + sku_count
+                        # time.sleep(8)
 
-                    sku.stock = new_stock
-                    sku.sales = new_sales
-                    sku.save()
+                        if sku_count > origin_stock:
+                            transaction.savepoint_rollback(save_id)
+                            raise serializers.ValidationError('商品库存不足')
 
-                    # 累计商品的SPU 销量信息
-                    sku.goods.sales += sku_count
-                    sku.goods.save()
+                        # 减少库存
+                        new_stock = origin_stock - sku_count
+                        new_sales = origin_sales + sku_count
 
-                    # 累计订单基本信息的数据
-                    order.total_count += sku_count  # 累计总数量
-                    order.total_amount += (sku.price * sku_count)  # 累计总额
 
-                    # 保存订单商品
-                    OrderGoods.objects.create(
-                        order=order,
-                        sku=sku,
-                        count=sku_count,
-                        price=sku.price,
-                    )
+
+                        result = SKU.objects.filter(stock=origin_stock, id=sku.id).update(stock=new_stock,
+                                                                                                sales=new_sales)
+                        if result == 0:  # 如果没有修改成功,说明有抢夺
+                            continue  #跳过这次循环，下面不会执行
+
+                        sku.stock = new_stock
+                        sku.sales = new_sales
+                        sku.save()
+
+                        # 累计商品的SPU 销量信息
+                        sku.goods.sales += sku_count
+                        sku.goods.save()
+
+                        # 累计订单基本信息的数据
+                        order.total_count += sku_count  # 累计总数量
+                        order.total_amount += (sku.price * sku_count)  # 累计总额
+
+                        # 保存订单商品
+                        OrderGoods.objects.create(
+                            order=order,
+                            sku=sku,
+                            count=sku_count,
+                            price=sku.price,
+                        )
+
+                        break  # 当前这个商品下单成功,跳出死循环,进行对下一个商品下单
+
 
                 # 更新订单的金额数量信息
                 order.total_amount += order.freight
@@ -156,7 +171,8 @@ class SaveOrderSerializer(serializers.ModelSerializer):
             # 更新redis中保存的购物车数据
             pl = redis_conn.pipeline()
             pl.hdel('cart_%s' % user.id, *redis_selected)
-            pl.srem('cart_selected_%s' % user.id, *redis_selected)
+            pl.srem('selected_%s' % user.id, *redis_selected)
             pl.execute()
+
 
             return order

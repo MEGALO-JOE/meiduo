@@ -365,3 +365,8 @@ CRONJOBS = [
 # 解决crontab中文问题
 CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
 
+# 支付宝
+ALIPAY_APPID = '2016092700607919'
+ALIPAY_DEBUG = True
+ALIPAY_URL = 'https://openapi.alipaydev.com/gateway.do'
+

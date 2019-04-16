@@ -138,6 +138,12 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         """
         address = self.get_object()
 
+        # 如果这个地址是用户的默认地址，删除用户的默认地址  -----
+        if address.user:
+            user = request.user
+            user.default_address = None
+            user.save()
+
         # 进行逻辑删除
         address.is_deleted = True
         address.save()
@@ -152,8 +158,10 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         设置默认地址
         """
         address = self.get_object()
+
         request.user.default_address = address
         request.user.save()
+
         return Response({'message': 'OK'}, status=status.HTTP_200_OK)
 
     # put /addresses/pk/title/

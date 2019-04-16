@@ -32,4 +32,6 @@ urlpatterns = [
     url(r'^',include('carts.urls')),  # 购物车
 
     url(r'^',include('orders.urls')),  # 购物车
+
+    url(r'^', include('payment.urls')), # 支付
 ]
