@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from drf_haystack.viewsets import HaystackViewSet
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -6,7 +7,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework import status
 
 from . models import GoodsCategory,SKU
-from .serializers import ChannelSerializer,CategorySerializer,SKUSerializer
+from .serializers import ChannelSerializer, CategorySerializer, SKUSerializer, SKUSearchSerializer
 
 
 class CategoryView(GenericAPIView):
@@ -62,3 +63,11 @@ class SKUListView(ListAPIView):
         # is_launched 上架的
         return SKU.objects.filter(category_id=category_id,is_launched=True)
 
+
+class SKUSearchViewSet(HaystackViewSet):
+    """
+    SKU搜索
+    """
+    index_models = [SKU]  # 指定查询集
+
+    serializer_class = SKUSearchSerializer  # 指定序列化器
