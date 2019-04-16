@@ -10,6 +10,8 @@ from rest_framework import status
 
 # /orders/(?P<order_id>\d+)/payment/
 from orders.models import OrderInfo
+from .models import Payment
+
 
 
 class PaymentView(APIView):
@@ -61,3 +63,50 @@ class PaymentView(APIView):
         # 响应登录支付宝链接
 
         return Response({"alipay_url":alipay_url})
+
+# payment/status/
+# payment/status/
+class PaymentStatusView(APIView):
+    """对接支付宝查询订单状态"""
+
+    def put(self, request):
+        """获取和修改订单状态"""
+
+        # 获取前端传入的请求参数
+        query_dict = request.query_params
+        data = query_dict.dict()
+        # 获取并从请求参数中剔除signature
+        signature = data.pop('sign')
+
+        # 创建支付宝支付对象
+        alipay = AliPay(
+            appid=settings.ALIPAY_APPID,
+            app_notify_url=None,  # 默认回调url
+            app_private_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "key/app_private_key.pem"),
+            alipay_public_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                "key/alipay_public_key.pem"),  # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+            sign_type="RSA2",  # RSA 或者 RSA2
+            debug=settings.ALIPAY_DEBUG  # 默认False
+        )
+
+        # 校验这个重定向是否是alipay重定向过来的
+        success = alipay.verify(data, signature)
+        if success:
+            # 读取order_id
+            order_id = data.get('out_trade_no')
+            # 读取支付宝流水号
+            trade_id = data.get('trade_no')
+
+            # 保存Payment模型类数据
+            Payment.objects.create(
+                order_id=order_id,
+                trade_id=trade_id
+            )
+
+            # 修改订单状态
+            OrderInfo.objects.filter(order_id=order_id, status=OrderInfo.ORDER_STATUS_ENUM['UNPAID']).update(status=OrderInfo.ORDER_STATUS_ENUM["UNSEND"])
+
+            # 响应trade_id
+            return Response({'trade_id': trade_id})
+        else:
+            return Response({'message': '非法请求'}, status=status.HTTP_403_FORBIDDEN)

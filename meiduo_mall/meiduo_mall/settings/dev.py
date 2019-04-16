@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'goods.apps.GoodsConfig',   #商品
     'contents.apps.ContentsConfig', #广告
     'orders.apps.OrdersConfig',   #订单
+    'payment.apps.PaymentConfig'  #支付
 
 ]
 
